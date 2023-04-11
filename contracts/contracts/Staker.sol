@@ -10,11 +10,15 @@ contract Staker {
     uint256 public constant threshold = 1 ether;
     uint256 public deadline = block.timestamp + 30 seconds;
     uint256 public totalStaked;
+    event Staked(address indexed user, uint256 amount);
+    event Withdrawn(address indexed user, uint256 amount);
+    event Executed();
 
     function stake() public payable {
         require(block.timestamp < deadline, "Staking period is over");
         balances[msg.sender] += msg.value;
         totalStaked += msg.value;
+        emit Staked(msg.sender, msg.value);
     }
 
     function withdraw() public {
@@ -27,6 +31,7 @@ contract Staker {
         require(success, "Transfer failed.");
         balances[msg.sender] = 0;
         totalStaked -= balances[msg.sender];
+        emit Withdrawn(msg.sender, balances[msg.sender]);
     }
 
     function execute() public {
@@ -39,6 +44,8 @@ contract Staker {
         externalContract.complete{value: address(this).balance}();
         balances[msg.sender] = 0;
         totalStaked = 0;
+        // deadline = block.timestamp + 30 seconds;
+        emit Executed();
     }
 
     function timeLeft() public view returns (uint256) {
