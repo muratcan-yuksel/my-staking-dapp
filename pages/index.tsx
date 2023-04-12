@@ -13,9 +13,15 @@ const Home = () => {
   const abi = stakerAbi.abi;
   const [walletConnected, setWalletConnected] = useState(false);
   const [deadline, setDeadline] = useState(0);
-  const [threshold, setThreshold] = useState<string>("0");
-  const [staked, setStaked] = useState(0);
+  const [threshold, setThreshold] = useState<number>(0);
+  const [staked, setStaked] = useState<number>(0);
   const [userBalance, setUserBalance] = useState(0);
+  const [totalBalance, setTotalBalance] = useState(0);
+  const [count, setCount] = useState(0);
+
+  const incrementCount = () => {
+    setCount(count + 1);
+  };
 
   const connectWallet = async () => {
     try {
@@ -31,6 +37,9 @@ const Home = () => {
         signer = await provider.getSigner();
       }
       getThreshold();
+      getTotalBalance();
+      getUserBalance();
+      setWalletConnected(true);
     } catch (error) {
       console.log("error", error);
     }
@@ -46,8 +55,9 @@ const Home = () => {
     const threshold = await contract.threshold();
     console.log("threshold", ethers.formatEther(threshold));
     let formattedThreshold = ethers.formatEther(threshold);
-    setThreshold(formattedThreshold);
-    console.log(threshold);
+    setThreshold(Number(formattedThreshold));
+    console.log(Number(formattedThreshold));
+    incrementCount();
   };
 
   const stake = async () => {
@@ -62,6 +72,22 @@ const Home = () => {
       value: ethers.parseEther("0.3"),
     });
     console.log("tx", tx);
+    // setStaked(Number(ethers.formatEther(tx.value)));
+    getTotalBalance();
+    incrementCount();
+  };
+
+  const getTotalBalance = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const contract = new ethers.Contract(
+      WHITELIST_CONTRACT_ADDRESS,
+      abi,
+      provider
+    );
+    const balance = await contract.totalBalance();
+    setStaked(Number(ethers.formatEther(balance)));
+    console.log("balance", balance);
+    incrementCount();
   };
 
   const getUserBalance = async () => {
@@ -74,12 +100,28 @@ const Home = () => {
     );
     const balance = await contract.userBalance();
     console.log("balance", balance);
-    setUserBalance(balance);
+    setUserBalance(Number(ethers.formatEther(balance)));
+    incrementCount();
+  };
+
+  const execute = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(
+      WHITELIST_CONTRACT_ADDRESS,
+      abi,
+      signer
+    );
+    const tx = await contract.execute();
+    console.log("tx", tx);
+    const receipt = await tx.wait();
+    console.log("receipt", receipt);
+    incrementCount();
   };
 
   useEffect(() => {
     // connectWallet();
-  }, []);
+  }, [count]);
 
   return (
     <div>
@@ -89,6 +131,11 @@ const Home = () => {
         <h2>/</h2>
         <h2>Staked {staked} </h2>
       </div>
+      <button onClick={stake}>Stake</button>
+      <br></br>
+      <button onClick={getUserBalance}>Get User Balance</button>
+      <h2>{userBalance}</h2>
+      <button onClick={execute}> Execute</button>
     </div>
   );
 };
