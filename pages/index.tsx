@@ -1,44 +1,96 @@
 import React, { useState, useEffect } from "react";
-import { WHITELIST_CONTRACT_ADDRESS, abi } from "./constants/";
+import { WHITELIST_CONTRACT_ADDRESS } from "./constants/";
 import { ethers } from "ethers";
+import stakerAbi from "../contracts/artifacts/contracts/Staker.sol/Staker.json";
 
 declare global {
   interface Window {
     ethereum?: any;
-    //
   }
 }
 
 const Home = () => {
+  const abi = stakerAbi.abi;
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [deadline, setDeadline] = useState(0);
+  const [threshold, setThreshold] = useState<string>("0");
+  const [staked, setStaked] = useState(0);
+  const [userBalance, setUserBalance] = useState(0);
+
   const connectWallet = async () => {
-    let signer = null;
+    try {
+      let signer = null;
 
-    let provider;
-    if (window.ethereum == null) {
-      // If MetaMask is not installed, we use the default provider,
-      // which is backed by a variety of third-party services (such
-      // as INFURA). They do not have private keys installed so are
-      // only have read-only access
-      console.log("MetaMask not installed; using read-only defaults");
-      provider = ethers.getDefaultProvider("localhost");
-    } else {
-      // Connect to the MetaMask EIP-1193 object. This is a standard
-      // protocol that allows Ethers access to make all read-only
-      // requests through MetaMask.
-      provider = new ethers.BrowserProvider(window.ethereum);
+      let provider;
+      if (window.ethereum == null) {
+        console.log("MetaMask not installed; using read-only defaults");
+        provider = ethers.getDefaultProvider("localhost");
+      } else {
+        provider = new ethers.BrowserProvider(window.ethereum);
 
-      // It also provides an opportunity to request access to write
-      // operations, which will be performed by the private key
-      // that MetaMask manages for the user.
-      signer = await provider.getSigner();
+        signer = await provider.getSigner();
+      }
+      getThreshold();
+    } catch (error) {
+      console.log("error", error);
     }
   };
 
+  const getThreshold = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const contract = new ethers.Contract(
+      WHITELIST_CONTRACT_ADDRESS,
+      abi,
+      provider
+    );
+    const threshold = await contract.threshold();
+    console.log("threshold", ethers.formatEther(threshold));
+    let formattedThreshold = ethers.formatEther(threshold);
+    setThreshold(formattedThreshold);
+    console.log(threshold);
+  };
+
+  const stake = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(
+      WHITELIST_CONTRACT_ADDRESS,
+      abi,
+      signer
+    );
+    const tx = await contract.stake({
+      value: ethers.parseEther("0.3"),
+    });
+    console.log("tx", tx);
+  };
+
+  const getUserBalance = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(
+      WHITELIST_CONTRACT_ADDRESS,
+      abi,
+      signer
+    );
+    const balance = await contract.userBalance();
+    console.log("balance", balance);
+    setUserBalance(balance);
+  };
+
   useEffect(() => {
-    connectWallet();
+    // connectWallet();
   }, []);
 
-  return <div></div>;
+  return (
+    <div>
+      <button onClick={connectWallet}>Connect Wallet</button>
+      <div className="flex">
+        <h2>Need {threshold && threshold} </h2>
+        <h2>/</h2>
+        <h2>Staked {staked} </h2>
+      </div>
+    </div>
+  );
 };
 
 export default Home;

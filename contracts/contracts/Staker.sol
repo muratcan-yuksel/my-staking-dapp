@@ -8,7 +8,7 @@ import "./ExternalContract.sol";
 contract Staker {
     mapping(address => uint256) public balances;
     uint256 public constant threshold = 1 ether;
-    uint256 public deadline = block.timestamp + 30 seconds;
+    uint256 public deadline = block.timestamp + 72 hours;
     uint256 public totalStaked;
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
@@ -54,5 +54,17 @@ contract Staker {
         } else {
             return deadline - block.timestamp;
         }
+    }
+
+    function userBalance() public view returns (uint256) {
+        return balances[msg.sender];
+    }
+
+    function totalBalance() public view returns (uint256) {
+        return totalStaked;
+    }
+
+    function thresholdReached() public view returns (bool) {
+        return totalStaked >= 1 ether;
     }
 }
