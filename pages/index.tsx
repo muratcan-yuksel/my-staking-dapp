@@ -73,8 +73,8 @@ const Home = () => {
     });
     console.log("tx", tx);
     // setStaked(Number(ethers.formatEther(tx.value)));
-    getTotalBalance();
     incrementCount();
+    getTotalBalance();
   };
 
   const getTotalBalance = async () => {
@@ -124,18 +124,43 @@ const Home = () => {
   }, [count]);
 
   return (
-    <div>
-      <button onClick={connectWallet}>Connect Wallet</button>
-      <div className="flex">
-        <h2>Need {threshold && threshold} </h2>
-        <h2>/</h2>
-        <h2>Staked {staked} </h2>
+    <div className="h-screen bg-black text-white">
+      <div className="flex justify-end">
+        <button
+          className="border border-spacing-4 border-pink-600 p-4 font-bold"
+          onClick={connectWallet}
+        >
+          Connect Wallet
+        </button>
       </div>
-      <button onClick={stake}>Stake</button>
-      <br></br>
-      <button onClick={getUserBalance}>Get User Balance</button>
-      <h2>{userBalance}</h2>
-      <button onClick={execute}> Execute</button>
+      <div className="flex flex-col justify-center items-center">
+        <div className="flex">
+          <h1 className="text-xl">Need {threshold && threshold} </h1>
+          <h2 className="text-xl"> / </h2>
+          <h1 className="text-xl">Staked {staked} </h1>
+        </div>
+        <button
+          className="border border-spacing-4 border-pink-600 p-4 font-bold m-4"
+          onClick={stake}
+        >
+          Stake
+        </button>
+        <br></br>
+        <button
+          className="border border-spacing-4 border-pink-600 p-4 font-bold m-4"
+          onClick={getUserBalance}
+        >
+          Get User Balance
+        </button>
+        <h2>User Balance: {userBalance}</h2>
+        <button
+          className="border border-spacing-4 border-pink-600 p-4 font-bold m-4"
+          onClick={execute}
+        >
+          {" "}
+          Execute
+        </button>
+      </div>
     </div>
   );
 };
